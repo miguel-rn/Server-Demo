@@ -11,7 +11,7 @@ public class Server extends Thread {
 	
 	private String version = "development 0.1.0";
 	private int port = 1188;
-	private DatagramSocket socket;
+	private static DatagramSocket socket;
 	private int maxPacketSize = 1024;
 	private boolean listening = true;
 	
@@ -43,7 +43,7 @@ public class Server extends Thread {
 	public void halt() {
 		logOutput("Disconnecting connected clients...", 3);
 		//Send global disconnect
-		sendPacket(null, "!disconnect"); //implement handler in client to process !disconnect command to close socket connection with server
+		ClientHandler.sendGlobally("!disconenct"); //implement handler in client to process !disconnect command to close socket connection with server
 		//Stop while(listening) to close socket
 		listening = false;
 		logOutput("Server stopped!", 1);
@@ -54,30 +54,26 @@ public class Server extends Thread {
 		logOutput("CLIENT ("+packet.getSocketAddress().hashCode()+") > " + data, 3);
 		switch(data.toLowerCase()){
 			case "ping":
-				sendPacket(packet, "pong!");
+				sendPacket(packet.getAddress(), packet.getPort(), "pong!");
 				logOutput("sent pong", 3);
 				break;
 			case "tokencheck":
 				//TODO add class to interface w MySQL db to verify token
 				logOutput("tokenCheck requested", 3);
 				ClientHandler.addClient(packet.getSocketAddress().hashCode(), 6, packet.getAddress(), packet.getPort(), "faketoken123");
-				sendPacket(packet, "You are now authenticated!");
+				sendPacket(packet.getAddress(), packet.getPort(), "You are now authenticated!");
 				break;
 		}
 	}
 	
-	public void sendPacket(DatagramPacket client, String message) {
+	public static void sendPacket(InetAddress clientip, int port, String message) {
 		byte[] d = message.getBytes();
-		if (client == null){
-			//send globally by fetching every player's player.getSocketAddress().hashCode() in player hashmap then looping socket.send to every player
-		}else{
-			try {
-				socket.send(new DatagramPacket(d, d.length, client.getAddress(), client.getPort()));
-			} catch (IOException e) {
-				logOutput(e.toString(), 0);
-			}
+		try {
+		    socket.send(new DatagramPacket(d, d.length, clientip, port));
+		} catch (IOException e) {
+		    logOutput(e.toString(), 0);
 		}
-	}
+    	}
 	
 	public static void logOutput(String output, Integer type) {
 		String Type;
