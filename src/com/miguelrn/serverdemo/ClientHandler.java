@@ -23,11 +23,17 @@ public class ClientHandler {
 	
 	public static int getAccountID(int socketid) {
 		for(Client _item : activeClients)
-        {
-            if(_item.getSocketID() == socketid)
-                return activeClients.get(activeClients.indexOf(_item)).getAccountID();
-        }
-		return -1;
+			{
+			    if(_item.getSocketID() == socketid)
+				return activeClients.get(activeClients.indexOf(_item)).getAccountID();
+			}
+				return -1;
 	}
+	
+	public static void sendGlobally(String message) {
+		for (Client _clients : activeClients) {
+			Server.sendPacket(activeClients.get(activeClients.indexOf(_clients)).getIP(), activeClients.get(activeClients.indexOf(_clients)).getPort(), message);
+		}
+    	}
 
 }
